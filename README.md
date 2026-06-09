@@ -73,7 +73,7 @@ Aplikasi berbasis Django yang dirancang untuk membantu pengelolaan transaksi keu
 Clone repository:
 
 ```bash
-git clone https://github.com/username/nama-repository.git
+git clone https://github.com/sahrulashar/sistem_informasi_keuangan.git
 ```
 
 Masuk ke direktori proyek:
