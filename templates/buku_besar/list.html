@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-12">
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <div>
+                <h1 class="fs-3 mb-1">Buku Besar</h1>
+                <p class="mb-0">
+                    Monitoring seluruh transaksi keuangan
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <h6>Total Debit</h6>
+                <h3 class="fw-bold">
+                    Rp {{ total_debit }}
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <h6>Total Kredit</h6>
+                <h3 class="fw-bold">
+                    Rp {{ total_kredit }}
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <h6>Saldo Akhir</h6>
+                <h3 class="fw-bold">
+                    Rp {{ saldo_akhir }}
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <h6>Total Transaksi</h6>
+                <h3 class="fw-bold">
+                    {{ total_transaksi }}
+                </h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="col-12">
+
+        <div class="card">
+
+            <div class="card-body p-4">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Keterangan</th>
+                                <th>Debit</th>
+                                <th>Kredit</th>
+                                <th>Saldo</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for item in transaksi %}
+                            <tr>
+
+                                <td>
+                                    {{ forloop.counter }}
+                                </td>
+
+                                <td>
+                                    {{ item.tanggal }}
+                                </td>
+
+                                <td>
+                                    {{ item.jam }}
+                                </td>
+
+                                <td>
+                                    {{ item.keterangan }}
+                                </td>
+
+                                <td>
+                                    Rp {{ item.debit }}
+                                </td>
+
+                                <td>
+                                    Rp {{ item.kredit }}
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        Rp {{ item.saldo }}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    {{ item.users }}
+                                </td>
+
+                            </tr>
+                            {% empty %}
+
+                            <tr>
+                                <td colspan="8" class="text-center">
+                                    Belum ada transaksi
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <footer class="text-center py-2 mt-4 text-secondary">
+            <p class="mb-0">
+                Copyright © 2026 Sistem Informasi Keuangan
+            </p>
+        </footer>
+    </div>
+</div>
+
+{% endblock %}
