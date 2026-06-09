@@ -55,10 +55,10 @@
                         </label>
 
                         <input
-                            type="date"
-                            name="tanggal"
+                            type="time"
+                            name="jam"
                             class="form-control"
-                            value="{{ kas.tanggal|date:'Y-m-d' }}"
+                            value="{{ kas.jam|time:'H:i' }}"
                             required
                         >
                     </div>
@@ -93,20 +93,6 @@
                             value="{{ kas.jumlah }}"
                             required
                         >
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">
-                            User
-                        </label>
-
-                        <input
-                            type="text"
-                            name="users"
-                            class="form-control"
-                            value="{{ kas.users }}"
-                            required
-                        >
-                    </div>
 
                 </div>
 

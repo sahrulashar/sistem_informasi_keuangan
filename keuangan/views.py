@@ -17,6 +17,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 from .models import *
 
@@ -53,6 +54,7 @@ def login_view(request):
     )
 
 # Create your views here.
+@login_required(login_url='login')
 def dashboard(request):
 
     total_masuk = (
@@ -192,7 +194,7 @@ def tambah_kas_masuk(request):
             jam=request.POST['jam'],
             keterangan=request.POST['keterangan'],
             jumlah=request.POST['jumlah'],
-            users=request.POST['users']
+            users=request.user.username
         )
 
         return redirect('kas_masuk')
@@ -215,7 +217,7 @@ def edit_kas_masuk(request, id):
         kas.jam = request.POST['jam']
         kas.keterangan = request.POST['keterangan']
         kas.jumlah = request.POST['jumlah']
-        kas.users = request.POST['users']
+        kas.users = request.user.username
 
         kas.save()
 
@@ -275,7 +277,7 @@ def tambah_kas_keluar(request):
             jam=request.POST['jam'],
             keterangan=request.POST['keterangan'],
             jumlah=request.POST['jumlah'],
-            users=request.POST['users']
+            users=request.user.username
         )
 
         return redirect('kas_keluar')
@@ -298,8 +300,6 @@ def edit_kas_keluar(request, id):
         kas.jam = request.POST['jam']
         kas.keterangan = request.POST['keterangan']
         kas.jumlah = request.POST['jumlah']
-        kas.users = request.POST['users']
-
         kas.save()
 
         return redirect('kas_keluar')
@@ -856,3 +856,9 @@ def export_pdf_kas_masuk(request):
     doc.build(elements)
 
     return response
+
+def logout_view(request):
+
+    logout(request)
+
+    return redirect('login')
