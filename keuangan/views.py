@@ -15,8 +15,42 @@ from reportlab.platypus import (
 )
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 
 from .models import *
+
+def login_view(request):
+
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(
+            request,
+            username=username,
+            password=password
+        )
+
+        if user is not None:
+
+            login(request, user)
+
+            return redirect('dashboard')
+
+        messages.error(
+            request,
+            'Username atau Password salah'
+        )
+
+    return render(
+        request,
+        'login.html'
+    )
 
 # Create your views here.
 def dashboard(request):
