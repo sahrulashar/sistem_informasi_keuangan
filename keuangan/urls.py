@@ -108,5 +108,12 @@ urlpatterns = [
         name='export_pdf_kas_keluar'
     ),
 
+    path('neraca-saldo/export/pdf/', views.export_pdf_neraca_saldo, name='export_pdf_neraca_saldo'),
+    path('neraca-saldo/export/excel/', views.export_excel_neraca_saldo, name='export_excel_neraca_saldo'),
+
+    path('laporan-laba-rugi/', views.laporan_laba_rugi, name='laporan_laba_rugi'),
+    path('laporan-laba-rugi/export/pdf/', views.export_pdf_laba_rugi, name='export_pdf_laba_rugi'),
+    path('laporan-laba-rugi/export/excel/', views.export_excel_laba_rugi, name='export_excel_laba_rugi'),
+
 ]
 

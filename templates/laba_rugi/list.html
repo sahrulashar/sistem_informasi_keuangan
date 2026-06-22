@@ -6,15 +6,15 @@
     <div class="col-12">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
-                <h1 class="fs-3 mb-1">Neraca Saldo</h1>
-                <p class="mb-0">Ringkasan saldo debit dan kredit</p>
+                <h1 class="fs-3 mb-1">Laporan Laba Rugi</h1>
+                <p class="mb-0">Ringkasan pendapatan, beban, dan laba rugi</p>
             </div>
 
             <div>
-                <a href="{% url 'export_pdf_neraca_saldo' %}" class="btn btn-danger">
+                <a href="{% url 'export_pdf_laba_rugi' %}" class="btn btn-danger">
                     Cetak PDF
                 </a>
-                <a href="{% url 'export_excel_neraca_saldo' %}" class="btn btn-success">
+                <a href="{% url 'export_excel_laba_rugi' %}" class="btn btn-success">
                     Cetak Excel
                 </a>
             </div>
@@ -26,8 +26,8 @@
     <div class="col-md-4">
         <div class="card h-100">
             <div class="card-body p-4">
-                <h6>Total Debit</h6>
-                <h3 class="fw-bold">Rp {{ total_debit }}</h3>
+                <h6>Total Pendapatan</h6>
+                <h3 class="fw-bold">Rp {{ total_pendapatan }}</h3>
             </div>
         </div>
     </div>
@@ -35,8 +35,8 @@
     <div class="col-md-4">
         <div class="card h-100">
             <div class="card-body p-4">
-                <h6>Total Kredit</h6>
-                <h3 class="fw-bold">Rp {{ total_kredit }}</h3>
+                <h6>Total Beban</h6>
+                <h3 class="fw-bold">Rp {{ total_beban }}</h3>
             </div>
         </div>
     </div>
@@ -44,8 +44,8 @@
     <div class="col-md-4">
         <div class="card h-100">
             <div class="card-body p-4">
-                <h6>Saldo</h6>
-                <h3 class="fw-bold">Rp {{ saldo }}</h3>
+                <h6>Laba / Rugi</h6>
+                <h3 class="fw-bold">Rp {{ laba_rugi }}</h3>
             </div>
         </div>
     </div>
@@ -58,29 +58,29 @@
                 <thead>
                     <tr>
                         <th>No</th>
-                        <th>Nama Akun</th>
-                        <th>Debit</th>
-                        <th>Kredit</th>
-                        <th>Saldo</th>
+                        <th>Keterangan</th>
+                        <th>Jumlah</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    {% for item in akun %}
                     <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ item.nama_akun }}</td>
-                        <td>Rp {{ item.debit }}</td>
-                        <td>Rp {{ item.kredit }}</td>
-                        <td><strong>Rp {{ item.saldo }}</strong></td>
+                        <td>1</td>
+                        <td>Pendapatan / Kas Masuk</td>
+                        <td>Rp {{ total_pendapatan }}</td>
                     </tr>
-                    {% empty %}
+
                     <tr>
-                        <td colspan="5" class="text-center">
-                            Belum ada data
-                        </td>
+                        <td>2</td>
+                        <td>Beban / Kas Keluar</td>
+                        <td>Rp {{ total_beban }}</td>
                     </tr>
-                    {% endfor %}
+
+                    <tr>
+                        <td>3</td>
+                        <td><strong>Laba / Rugi</strong></td>
+                        <td><strong>Rp {{ laba_rugi }}</strong></td>
+                    </tr>
                 </tbody>
             </table>
         </div>

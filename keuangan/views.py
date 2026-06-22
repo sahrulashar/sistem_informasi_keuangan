@@ -862,3 +862,136 @@ def logout_view(request):
     logout(request)
 
     return redirect('login')
+
+def export_pdf_neraca_saldo(request):
+    total_debit = KasMasuk.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    total_kredit = KasKeluar.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    saldo = total_debit - total_kredit
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="neraca_saldo.pdf"'
+
+    doc = SimpleDocTemplate(response)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph("NERACA SALDO", styles['Title']))
+    elements.append(Spacer(1, 15))
+
+    table_data = [
+        ['No', 'Nama Akun', 'Debit', 'Kredit', 'Saldo'],
+        [
+            1,
+            'Kas',
+            f"Rp {total_debit:,.0f}",
+            f"Rp {total_kredit:,.0f}",
+            f"Rp {saldo:,.0f}"
+        ]
+    ]
+
+    table = Table(table_data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    return response
+
+
+def export_excel_neraca_saldo(request):
+    total_debit = KasMasuk.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    total_kredit = KasKeluar.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    saldo = total_debit - total_kredit
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Neraca Saldo"
+
+    ws.append(['No', 'Nama Akun', 'Debit', 'Kredit', 'Saldo'])
+    ws.append([1, 'Kas', float(total_debit), float(total_kredit), float(saldo)])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=neraca_saldo.xlsx'
+
+    wb.save(response)
+    return response
+
+
+def laporan_laba_rugi(request):
+    total_pendapatan = KasMasuk.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    total_beban = KasKeluar.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    laba_rugi = total_pendapatan - total_beban
+
+    return render(request, 'laba_rugi/list.html', {
+        'total_pendapatan': total_pendapatan,
+        'total_beban': total_beban,
+        'laba_rugi': laba_rugi,
+    })
+
+
+def export_pdf_laba_rugi(request):
+    total_pendapatan = KasMasuk.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    total_beban = KasKeluar.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    laba_rugi = total_pendapatan - total_beban
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="laporan_laba_rugi.pdf"'
+
+    doc = SimpleDocTemplate(response)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph("LAPORAN LABA RUGI", styles['Title']))
+    elements.append(Spacer(1, 15))
+
+    table_data = [
+        ['Keterangan', 'Jumlah'],
+        ['Pendapatan / Kas Masuk', f"Rp {total_pendapatan:,.0f}"],
+        ['Beban / Kas Keluar', f"Rp {total_beban:,.0f}"],
+        ['Laba / Rugi', f"Rp {laba_rugi:,.0f}"],
+    ]
+
+    table = Table(table_data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('BACKGROUND', (0,-1), (-1,-1), colors.lightgrey),
+        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    return response
+
+
+def export_excel_laba_rugi(request):
+    total_pendapatan = KasMasuk.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    total_beban = KasKeluar.objects.aggregate(total=Sum('jumlah'))['total'] or 0
+    laba_rugi = total_pendapatan - total_beban
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Laba Rugi"
+
+    ws.append(['Keterangan', 'Jumlah'])
+    ws.append(['Pendapatan / Kas Masuk', float(total_pendapatan)])
+    ws.append(['Beban / Kas Keluar', float(total_beban)])
+    ws.append(['Laba / Rugi', float(laba_rugi)])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=laba_rugi.xlsx'
+
+    wb.save(response)
+    return response
