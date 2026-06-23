@@ -11,15 +11,23 @@ from reportlab.platypus import (
     Table,
     TableStyle,
     Paragraph,
-    Spacer
+    Spacer,
+    Image
 )
+from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .models import *
+
+def is_admin(user):
+    return user.groups.filter(name='Admin').exists()
+
+def is_direktur(user):
+    return user.groups.filter(name='Direktur').exists()
 
 def login_view(request):
 
@@ -179,6 +187,8 @@ def dashboard(request):
         context
     )
 
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def kas_masuk(request):
     data = KasMasuk.objects.all().order_by('-tanggal')
     return render(request, 'kas_masuk/list.html', {
@@ -242,6 +252,8 @@ def hapus_kas_masuk(request, id):
 
     return redirect('kas_masuk')
 
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def kas_keluar(request):
 
     data = KasKeluar.objects.all()
@@ -268,6 +280,9 @@ def kas_keluar(request):
             'tanggal_akhir': tanggal_akhir
         }
     )
+
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def tambah_kas_keluar(request):
 
     if request.method == 'POST':
@@ -287,6 +302,8 @@ def tambah_kas_keluar(request):
         'kas_keluar/create.html'
     )
 
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def edit_kas_keluar(request, id):
 
     kas = get_object_or_404(
@@ -312,6 +329,8 @@ def edit_kas_keluar(request, id):
         }
     )
 
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def hapus_kas_keluar(request, id):
 
     data = get_object_or_404(
@@ -359,6 +378,8 @@ def dashboard(request):
         context
     )
 
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def list_karyawan(request):
     karyawan = Karyawan.objects.all().order_by('-id')
 
@@ -370,7 +391,8 @@ def list_karyawan(request):
         }
     )
 
-
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def tambah_karyawan(request):
 
     if request.method == 'POST':
@@ -384,7 +406,8 @@ def tambah_karyawan(request):
 
     return render(request, 'karyawan/create.html')
 
-
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def edit_karyawan(request, id):
 
     data = get_object_or_404(Karyawan, id=id)
@@ -405,7 +428,8 @@ def edit_karyawan(request, id):
         }
     )
 
-
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def hapus_karyawan(request, id):
 
     data = get_object_or_404(Karyawan, id=id)
@@ -413,6 +437,8 @@ def hapus_karyawan(request, id):
 
     return redirect('list_karyawan')
 
+
+@login_required(login_url='login')
 def buku_besar(request):
 
     transaksi = []
@@ -479,6 +505,8 @@ def buku_besar(request):
         }
     )
 
+
+@login_required(login_url='login')
 def neraca_saldo(request):
 
     total_debit = (
@@ -517,6 +545,54 @@ def neraca_saldo(request):
         context
     )
 
+def tambah_kop(elements, styles):
+
+    logo = Image(
+        "static/assets/images/logo.jpeg",
+        width=1.8*cm,
+        height=1.8*cm
+    )
+
+    teks_kop = [
+        Paragraph(
+            "<para align='center'><font size='16'><b>WISATA ALAM BANGA</b></font></para>",
+            styles['Normal']
+        ),
+        Spacer(1, 5),
+        Paragraph(
+            "<para align='center'><font size='10'>Desa Gattareng Toa, Kabupaten Soppeng</font></para>",
+            styles['Normal']
+        ),
+        Spacer(1, 3),
+        Paragraph(
+            "<para align='center'><font size='10'>Sistem Informasi Akuntansi</font></para>",
+            styles['Normal']
+        ),
+    ]
+
+    kop = Table([
+        [
+            logo,
+            teks_kop,
+            ""
+        ]
+    ], colWidths=[2.5*cm, 11*cm, 2.5*cm])
+
+    kop.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+
+    elements.append(kop)
+    elements.append(Spacer(1, 20))
+
+
 def export_pdf_kas_keluar(request):
 
     tanggal_awal = request.GET.get('tanggal_awal')
@@ -532,24 +608,21 @@ def export_pdf_kas_keluar(request):
             ]
         )
 
-    response = HttpResponse(
-        content_type='application/pdf'
-    )
-
+    response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = (
         'attachment; filename="laporan_kas_keluar.pdf"'
     )
 
     doc = SimpleDocTemplate(response)
-
     styles = getSampleStyleSheet()
-
     elements = []
+
+    tambah_kop(elements, styles)
 
     elements.append(
         Paragraph(
-            "LAPORAN KAS KELUAR",
-            styles['Title']
+            "<b>LAPORAN KAS KELUAR</b>",
+            styles['Heading1']
         )
     )
 
@@ -564,20 +637,12 @@ def export_pdf_kas_keluar(request):
     elements.append(Spacer(1, 15))
 
     table_data = [
-        [
-            'No',
-            'Tanggal',
-            'Jam',
-            'Keterangan',
-            'User',
-            'Jumlah'
-        ]
+        ['No', 'Tanggal', 'Jam', 'Keterangan', 'User', 'Jumlah']
     ]
 
     total = 0
 
     for no, item in enumerate(data_queryset, start=1):
-
         total += item.jumlah
 
         table_data.append([
@@ -598,19 +663,24 @@ def export_pdf_kas_keluar(request):
         f"Rp {total:,.0f}"
     ])
 
-    table = Table(table_data)
+    table = Table(
+        table_data,
+        colWidths=[1*cm, 2.5*cm, 2*cm, 4.5*cm, 2*cm, 3.2*cm]
+    )
 
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.black),
-        ('BACKGROUND', (0,-1), (-1,-1), colors.lightgrey),
-        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('ALIGN', (0, 1), (2, -1), 'CENTER'),
+        ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
     ]))
 
     elements.append(table)
-
     elements.append(Spacer(1, 20))
 
     elements.append(
@@ -765,24 +835,23 @@ def export_pdf_kas_masuk(request):
             ]
         )
 
-    response = HttpResponse(
-        content_type='application/pdf'
-    )
-
+    response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = (
         'attachment; filename="laporan_kas_masuk.pdf"'
     )
 
     doc = SimpleDocTemplate(response)
-
     styles = getSampleStyleSheet()
-
     elements = []
 
+    # KOP LAPORAN
+    tambah_kop(elements, styles)
+
+    # JUDUL LAPORAN
     elements.append(
         Paragraph(
-            "LAPORAN KAS MASUK",
-            styles['Title']
+            "<b>LAPORAN KAS MASUK</b>",
+            styles['Heading1']
         )
     )
 
@@ -797,14 +866,7 @@ def export_pdf_kas_masuk(request):
     elements.append(Spacer(1, 15))
 
     table_data = [
-        [
-            'No',
-            'Tanggal',
-            'Jam',
-            'Keterangan',
-            'User',
-            'Jumlah'
-        ]
+        ['No', 'Tanggal', 'Jam', 'Keterangan', 'User', 'Jumlah']
     ]
 
     total = 0
@@ -831,19 +893,24 @@ def export_pdf_kas_masuk(request):
         f"Rp {total:,.0f}"
     ])
 
-    table = Table(table_data)
+    table = Table(
+        table_data,
+        colWidths=[1*cm, 2.5*cm, 2*cm, 4.5*cm, 2*cm, 3.2*cm]
+    )
 
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.black),
-        ('BACKGROUND', (0,-1), (-1,-1), colors.lightgrey),
-        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('ALIGN', (0, 1), (2, -1), 'CENTER'),
+        ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
     ]))
 
     elements.append(table)
-
     elements.append(Spacer(1, 20))
 
     elements.append(
@@ -864,6 +931,7 @@ def logout_view(request):
     return redirect('login')
 
 def export_pdf_neraca_saldo(request):
+
     total_debit = KasMasuk.objects.aggregate(total=Sum('jumlah'))['total'] or 0
     total_kredit = KasKeluar.objects.aggregate(total=Sum('jumlah'))['total'] or 0
     saldo = total_debit - total_kredit
@@ -875,7 +943,17 @@ def export_pdf_neraca_saldo(request):
     styles = getSampleStyleSheet()
     elements = []
 
-    elements.append(Paragraph("NERACA SALDO", styles['Title']))
+    # KOP LAPORAN
+    tambah_kop(elements, styles)
+
+    # JUDUL LAPORAN
+    elements.append(
+        Paragraph(
+            "<b>NERACA SALDO</b>",
+            styles['Heading1']
+        )
+    )
+
     elements.append(Spacer(1, 15))
 
     table_data = [
@@ -889,15 +967,33 @@ def export_pdf_neraca_saldo(request):
         ]
     ]
 
-    table = Table(table_data)
+    table = Table(
+        table_data,
+        colWidths=[1*cm, 5*cm, 3*cm, 3*cm, 3*cm]
+    )
+
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('ALIGN', (0, 1), (1, -1), 'CENTER'),
+        ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
     ]))
 
     elements.append(table)
+    elements.append(Spacer(1, 20))
+
+    elements.append(
+        Paragraph(
+            f"<b>Saldo Akhir : Rp {saldo:,.0f}</b>",
+            styles['Normal']
+        )
+    )
+
     doc.build(elements)
 
     return response
@@ -923,7 +1019,7 @@ def export_excel_neraca_saldo(request):
     wb.save(response)
     return response
 
-
+@login_required(login_url='login')
 def laporan_laba_rugi(request):
     total_pendapatan = KasMasuk.objects.aggregate(total=Sum('jumlah'))['total'] or 0
     total_beban = KasKeluar.objects.aggregate(total=Sum('jumlah'))['total'] or 0
@@ -937,6 +1033,7 @@ def laporan_laba_rugi(request):
 
 
 def export_pdf_laba_rugi(request):
+
     total_pendapatan = KasMasuk.objects.aggregate(total=Sum('jumlah'))['total'] or 0
     total_beban = KasKeluar.objects.aggregate(total=Sum('jumlah'))['total'] or 0
     laba_rugi = total_pendapatan - total_beban
@@ -948,7 +1045,17 @@ def export_pdf_laba_rugi(request):
     styles = getSampleStyleSheet()
     elements = []
 
-    elements.append(Paragraph("LAPORAN LABA RUGI", styles['Title']))
+    # KOP LAPORAN
+    tambah_kop(elements, styles)
+
+    # JUDUL LAPORAN
+    elements.append(
+        Paragraph(
+            "<b>LAPORAN LABA RUGI</b>",
+            styles['Heading1']
+        )
+    )
+
     elements.append(Spacer(1, 15))
 
     table_data = [
@@ -958,17 +1065,32 @@ def export_pdf_laba_rugi(request):
         ['Laba / Rugi', f"Rp {laba_rugi:,.0f}"],
     ]
 
-    table = Table(table_data)
+    table = Table(
+        table_data,
+        colWidths=[10*cm, 5*cm]
+    )
+
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.black),
-        ('BACKGROUND', (0,-1), (-1,-1), colors.lightgrey),
-        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
     ]))
 
     elements.append(table)
+    elements.append(Spacer(1, 20))
+
+    elements.append(
+        Paragraph(
+            f"Laba / Rugi Bersih : Rp {laba_rugi:,.0f}",
+            styles['Normal']
+        )
+    )
+
     doc.build(elements)
 
     return response
